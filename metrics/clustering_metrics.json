@@ -1,0 +1,11 @@
+{
+  "KMeans": {
+    "best_k": 2,
+    "best_silhouette": 0.24579472354770546
+  },
+  "Agglomerative": {
+    "best_k": 2,
+    "best_linkage": "complete",
+    "best_silhouette": 0.827317834626342
+  }
+}
