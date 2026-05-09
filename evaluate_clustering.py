@@ -13,46 +13,10 @@ algorithms on the bank-marketing dataset:
   all combinations of ``n_clusters`` ∈ [2, 9] and linkage methods
   ``{complete, average, single}``.
 
-Generated outputs
-
-plots/
-    silhouette_comparison.png
-        Bar chart comparing best silhouette scores for both algorithms.
-    cluster_size_distribution.png
-        Side-by-side bar charts showing how many samples each cluster
-        contains for both best models.
-    centroid_heatmap.png
-        Heatmap of mean standardised feature values per cluster (both
-        algorithms stacked vertically).
-
-metrics/
-    clustering_metrics.csv
-        Best score, k, and linkage for each model.
-    clustering_metrics.json
-        Nested dict with best results.
-    cluster_descriptions.json
-        Per-cluster interpretations derived from original unscaled data
-        (age, balance, duration, job, education, deposit rate).
-
-Console
-    Best silhouette scores and cluster counts for both models.
-
 Run
----
-::
-
     python evaluate_clustering.py
 
-Notes
------
-* ``matplotlib.use("Agg")`` is set at module level for headless operation.
-* This script does **not** import ``Clustering_Baseline.py`` or
-  ``Model_Training_Evaluation.py`` to avoid triggering their module-level
-  training code.  The clustering pipelines are replicated inline.
-* Because ``Preprocessing.clustering_processing`` does not set a
-  ``random_state`` in ``train_test_split``, the pandas index of
-  ``X_train`` is used to align cluster labels back to the original
-  unscaled DataFrame for interpretation.
+
 """
 
 import os
@@ -75,10 +39,6 @@ from Preprocessing import Preprocessing
 
 def run_kmeans_sweep(X_train, k_range=range(2, 10)):
     """Run K-Means for each k in ``k_range`` and return the best result.
-
-    Replicates ``Clustering_Baseline.py`` exactly.  K-Means is fitted
-    with ``n_init='auto'`` (scikit-learn chooses the number of restarts).
-    The best model is selected by the highest silhouette score.
 
     Parameters
     X_train : pd.DataFrame
@@ -128,10 +88,6 @@ def run_agglomerative_sweep(
     linkage_methods=None,
 ):
     """Run Agglomerative Clustering for all (k, linkage) combinations.
-
-    Replicates ``Model_Training_Evaluation.clustering_model`` exactly.
-    Tests 8 × 3 = 24 configurations and returns the one with the highest
-    silhouette score.
 
     Linkage method semantics
     
@@ -203,11 +159,7 @@ def run_agglomerative_sweep(
 def describe_clusters(labels, X_train_raw, y_train_raw, model_name):
     """Describe each cluster using original (unscaled) feature values.
 
-    Groups the pre-encoded, pre-scaled rows of ``X_train_raw`` by cluster
-    label, then computes summary statistics per cluster.  This gives
-    human-interpretable descriptions of what each cluster represents in
-    the context of the bank marketing campaign.
-
+    
     Parameters
     labels : np.ndarray
         Cluster label array aligned row-by-row with ``X_train_raw``.
@@ -275,9 +227,7 @@ def describe_clusters(labels, X_train_raw, y_train_raw, model_name):
     return descriptions
 
 
-# ------------------------------------------------------------------ #
-#  Plot generators                                                    #
-# ------------------------------------------------------------------ #
+# Plot generators
 
 def plot_silhouette_comparison(kmeans_result, agg_result, output_dir="plots"):
     """Save a bar chart comparing best silhouette scores for both models.
@@ -388,7 +338,6 @@ def plot_centroid_heatmap(kmeans_result, agg_result, X_train, output_dir="plots"
     only numerical features are plotted to keep the chart readable.
 
     Parameters
-    ----------
     kmeans_result : dict
         Output of :func:`run_kmeans_sweep`.
     agg_result : dict
@@ -399,7 +348,6 @@ def plot_centroid_heatmap(kmeans_result, agg_result, X_train, output_dir="plots"
         Directory to save the figure.
 
     Output
-    ------
     ``{output_dir}/centroid_heatmap.png``
     """
     # Limit to numerical columns if OHE expanded the feature space too much
@@ -443,9 +391,7 @@ def plot_centroid_heatmap(kmeans_result, agg_result, X_train, output_dir="plots"
     print(f"  Saved: {path}")
 
 
-# ------------------------------------------------------------------ #
-#  Metric persistence                                                 #
-# ------------------------------------------------------------------ #
+# Metric persistence
 
 def save_metrics(kmeans_result, agg_result, kmeans_desc, agg_desc, output_dir="metrics"):
     """Save clustering metrics and cluster descriptions to CSV and JSON.
@@ -517,9 +463,7 @@ def save_metrics(kmeans_result, agg_result, kmeans_desc, agg_desc, output_dir="m
     print(f"  Saved: {desc_path}")
 
 
-# ------------------------------------------------------------------ #
-#  Entry point                                                        #
-# ------------------------------------------------------------------ #
+# Entry point
 
 if __name__ == "__main__":
     # Create output directories if they do not exist
