@@ -1,15 +1,15 @@
 """
 customer_targeting_system.py
-============================
+
 Inference-based customer targeting and recommendation system.
 
 Architecture
-------------
+
 This module is structured in two clearly separated phases:
 
 **Setup phase** (runs once on startup)
-    Calls :meth:`Model_Training_Evaluation.classification_model` and
-    :meth:`Model_Training_Evaluation.clustering_model` — the existing
+    Calls `Model_Training_Evaluation.classification_model` and
+    `Model_Training_Evaluation.clustering_model` — the existing
     training functions — to obtain the fitted model objects.  No new
     training logic is written here.
 
@@ -18,58 +18,9 @@ This module is structured in two clearly separated phases:
     representation from the pipeline that was fitted during setup, runs
     both models, and produces a marketing recommendation.
 
-Why this separation matters
----------------------------
-The previous approach ran predictions on the entire bank.csv dataset,
-including records that the models were trained on.  This module instead
-samples ``N`` customer records from the **held-out test set** (the 20%
-of bank.csv that the classifier never saw during training).  Those
-records serve as the "arriving customers" for the targeting system.
-Their preprocessed forms (``X_test_clf``, and the clustering equivalent)
-are the output of transformers that were *fitted only on the training
-data* — so inference is correct and leak-free.
-
-Inference pipeline per customer
---------------------------------
-::
-
-    Raw record (from bank.csv)
-         |
-         | [displayed as customer input]
-         |
-    X_test_clf[idx]        →  clf_model.predict_proba() →  deposit_prob, pred_class
-    all_clust[idx]         →  nearest_centroid(agg_model) →  cluster_id
-         |
-    cluster_profiles[id]   →  characterise_clusters()   →  cluster_label
-         |
-    (deposit_prob, cluster_label) → lookup_recommendation() → action, reasoning
-
-Clustering inference note
--------------------------
-:class:`~sklearn.cluster.AgglomerativeClustering` is transductive — it
-has no ``predict()`` method.  For customers whose preprocessed form lives
-in ``X_test_clust``, cluster assignment is performed by nearest-centroid
-lookup: cluster centroids are the column-wise means of the training rows
-in each cluster (``agg_model.labels_``), and the test customer is
-assigned to the closest centroid by Euclidean distance.
-
 Run
----
-::
 
     python customer_targeting_system.py
-
-Outputs (saved to ``results/``)
---------------------------------
-targeting_report.csv
-    customer_id, raw input features, deposit_probability, predicted_class,
-    cluster_id, cluster_label, recommended_action, reasoning.
-deposit_probability_by_cluster.png
-    Box plot of deposit probability distributions per segment.
-cluster_distribution.png
-    Bar chart of customer counts per segment.
-recommendation_distribution.png
-    Horizontal bar chart of recommended action frequencies.
 
 Reused components
 -----------------
@@ -177,9 +128,6 @@ RECOMMENDATION_TABLE = {
 }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Setup helpers
-# ─────────────────────────────────────────────────────────────────────────────
 
 def setup_models(data_file):
     """Run both preprocessing pipelines and train both models.
@@ -245,36 +193,8 @@ def setup_models(data_file):
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Customer input sampling
-# ─────────────────────────────────────────────────────────────────────────────
 
 def sample_customer_inputs(X_test_clf, df_raw, n, seed):
-    """Sample ``n`` customer records from the held-out classifier test set.
-
-    The test set (``X_test_clf``) is the 20% of bank.csv that the Random
-    Forest classifier was **never trained on**.  Sampling from it gives us
-    realistic customer records that represent genuinely unseen inputs to
-    the targeting system.
-
-    Parameters
-    ----------
-    X_test_clf : pd.DataFrame
-        Held-out encoded feature matrix from the classification pipeline.
-        Its index maps back to ``df_raw``.
-    df_raw : pd.DataFrame
-        The original (unscaled, unencoded) bank.csv DataFrame — used to
-        display readable customer attributes alongside predictions.
-    n : int
-        Number of customer records to sample.
-    seed : int
-        Random seed for reproducibility.
-
-    Returns
-    -------
-    sampled_idx : pd.Index
-        Original DataFrame indices of the sampled customers.
-    customer_inputs_raw : pd.DataFrame
-        Raw (human-readable) attributes for the sampled customers.
-    """
     rng = np.random.default_rng(seed)
     chosen = rng.choice(X_test_clf.index, size=min(n, len(X_test_clf)),
                         replace=False)
@@ -290,7 +210,7 @@ def sample_customer_inputs(X_test_clf, df_raw, n, seed):
 def assign_cluster(agg_model, X_train_clust, customer_clust_row):
     """Assign a single customer to a cluster via nearest-centroid lookup.
 
-    :class:`~sklearn.cluster.AgglomerativeClustering` stores
+    sklearn.cluster.AgglomerativeClustering stores
     ``labels_`` (the training-data assignments) but has no ``predict()``
     method.  To assign a new customer, we compute the Euclidean distance
     from the customer's feature vector to each cluster centroid (the
@@ -333,7 +253,6 @@ def build_cluster_profiles(agg_model, X_train_clust, df_raw):
     statistics.
 
     Parameters
-    ----------
     agg_model : AgglomerativeClustering
         Fitted model with ``labels_``.
     X_train_clust : pd.DataFrame
@@ -344,7 +263,6 @@ def build_cluster_profiles(agg_model, X_train_clust, df_raw):
         with the preprocessing output.
 
     Returns
-    -------
     profiles : dict
         ``{cluster_id (int): profile_dict}`` with keys
         ``size``, ``pct_total``, ``age_mean``, ``balance_mean``,
@@ -405,11 +323,6 @@ def _assign_cluster_label(profile, global_stats):
     global_stats : dict
         Population medians from :func:`build_cluster_profiles`.
 
-    Returns
-    -------
-    str
-        One of ``'High-Value Engaged'``, ``'High-Value Passive'``,
-        ``'Budget Engaged'``, ``'Low-Engagement'``.
     """
     affluent   = profile["balance_mean"]  > global_stats["median_balance"]
     engaged    = profile["duration_mean"] > global_stats["median_duration"]
@@ -478,7 +391,6 @@ def run_inference(customer_idx, raw_record,
     both models, and assembles a recommendation.
 
     Parameters
-    ----------
     customer_idx : int
         Original DataFrame index (customer ID).
     raw_record : pd.Series
@@ -500,13 +412,6 @@ def run_inference(customer_idx, raw_record,
     cluster_profiles : dict
         ``{cluster_id: profile_dict}`` from :func:`build_cluster_profiles`.
 
-    Returns
-    -------
-    dict
-        Keys: ``customer_id``, ``deposit_probability``, ``predicted_class``,
-        ``deposit_tier``, ``cluster_id``, ``cluster_label``,
-        ``recommended_action``, ``reasoning``,
-        plus all raw feature values (age, job, balance, …).
     """
     # ── Classification inference ─────────────────────────────────────────────
     # Retrieve the customer's encoded feature vector (fitted on training data)
@@ -683,9 +588,7 @@ def plot_recommendation_distribution(report_df, output_dir):
     print(f"  Saved: {path}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Display helper
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 def print_customer_result(result, idx, total):
     """Pretty-print a single customer's inference result to stdout."""
@@ -716,10 +619,6 @@ def print_customer_result(result, idx, total):
     print(f"  WHY    │ {result['reasoning']}")
     print(bar)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Entry point
-# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     os.makedirs("results", exist_ok=True)

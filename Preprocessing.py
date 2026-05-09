@@ -1,30 +1,30 @@
 """
 Preprocessing
-=============
-Provides the ``Preprocessing`` class for loading and preparing the bank
+
+Provides the Preprocessing class for loading and preparing the bank
 marketing dataset (``bank.csv``) for downstream classification and
 clustering models.
 
-Supported pipeline modes
-------------------------
+Two prediction modes:
+
 classification
     Encodes features and splits into labelled train/test sets
     (X_train, X_test, y_train, y_test).  Suitable for supervised learning.
 
 clustering
-    Additionally applies a Yeo-Johnson power transform and
+    Additionally applies a Yeo-Johnson power transform to reduce skewness and
     StandardScaler normalisation on numerical features before splitting
     into train/test sets (X_train, X_test — no labels).  Suitable for
     unsupervised learning.
 
 Dataset
--------
+
 The expected input CSV (``bank.csv``) is the UCI Bank Marketing dataset:
 11,161 rows × 17 columns.  The binary target column is ``deposit``
 (yes = 1, no = 0 after encoding).
 
 Dependencies
-------------
+
 pandas, numpy, scikit-learn, category_encoders
 """
 
@@ -130,15 +130,12 @@ class Preprocessing():
         # The dataset is ready for model training.
         return X_train, X_test, y_train, y_test
 
-    # ------------------------------------------------------------------ #
-    #  Clustering pipeline                                                #
-    # ------------------------------------------------------------------ #
+    #  Clustering pipeline                                                
 
     def clustering_processing(self, df):
         """Prepare a bank-marketing DataFrame for unsupervised clustering.
 
         Processing steps
-        ----------------
         1. Drop duplicate rows.
         2. Drop rows with missing values.
         3. Separate features (``X``) from the target column ``deposit``
@@ -155,12 +152,10 @@ class Preprocessing():
            ``job``, ``marital``, ``contact``, ``month``, ``poutcome``.
 
         Parameters
-        ----------
         df : pd.DataFrame
             Raw bank-marketing dataset loaded from ``bank.csv``.
 
         Returns
-        -------
         X_train : pd.DataFrame
             Fully encoded and scaled training feature matrix (no labels).
         X_test : pd.DataFrame
@@ -212,10 +207,7 @@ class Preprocessing():
         # The set is ready for model training
         return X_train, X_test
 
-    # ------------------------------------------------------------------ #
-    #  Dispatcher                                                         #
-    # ------------------------------------------------------------------ #
-
+    
     def pre_processing(self, model_mode, file: str):
         """Load ``bank.csv`` and dispatch to the correct preprocessing pipeline.
 

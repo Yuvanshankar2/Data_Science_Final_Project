@@ -1,6 +1,6 @@
 """
 evaluate_classification.py
-==========================
+
 Standalone evaluation script that trains and compares two classifiers on
 the bank-marketing dataset:
 
@@ -15,7 +15,7 @@ the bank-marketing dataset:
   probability threshold derived from the precision-recall curve.
 
 Generated outputs
------------------
+
 plots/
     confusion_matrices.png
         Side-by-side confusion matrices for both classifiers.
@@ -34,13 +34,11 @@ Console
     Formatted comparison table showing metric values and % improvements.
 
 Run
----
-::
 
     python evaluate_classification.py
 
 Notes
------
+
 * ``matplotlib.use("Agg")`` is set at the top of this module so plots
   can be generated in headless (no-display) environments.
 * This script does **not** import ``Classification_Baseline.py`` or
@@ -74,9 +72,7 @@ from sklearn.metrics import (
 from Preprocessing import Preprocessing
 
 
-# ------------------------------------------------------------------ #
-#  Model builders                                                     #
-# ------------------------------------------------------------------ #
+#  Model builders                                                     
 
 def build_logistic_regression_model(X_train, X_test, y_train, y_test):
     """Train and evaluate a Logistic Regression baseline classifier.
@@ -87,7 +83,7 @@ def build_logistic_regression_model(X_train, X_test, y_train, y_test):
     with no hyperparameter tuning.
 
     Parameters
-    ----------
+    
     X_train : pd.DataFrame
         Encoded training feature matrix.
     X_test : pd.DataFrame
@@ -98,7 +94,7 @@ def build_logistic_regression_model(X_train, X_test, y_train, y_test):
         Binary test labels.
 
     Returns
-    -------
+    
     dict
         Keys: ``model``, ``scaler``, ``y_pred``, ``y_prob``,
         ``accuracy``, ``precision``, ``recall``, ``f1``, ``roc_auc``.
@@ -136,14 +132,13 @@ def build_random_forest_model(X_train, X_test, y_train, y_test):
     """Train and evaluate a Random Forest classifier with hyperparameter search.
 
     Replicates ``Model_Training_Evaluation.classification_model`` exactly:
-    uses :class:`~sklearn.model_selection.RandomizedSearchCV` over
-    ``n_estimators``, ``max_depth``, and ``min_samples_split`` with
-    5-fold :class:`~sklearn.model_selection.StratifiedKFold`
+    uses RandomizedSearchCV over ``n_estimators``, ``max_depth``, and ``min_samples_split`` with
+    5-fold StratifiedKFold
     cross-validation.  The optimal probability threshold is derived by
     maximising ``precision × recall`` on the precision-recall curve.
 
     Parameters
-    ----------
+    
     X_train : pd.DataFrame
         Encoded training feature matrix (no scaling needed for RF).
     X_test : pd.DataFrame
@@ -154,7 +149,7 @@ def build_random_forest_model(X_train, X_test, y_train, y_test):
         Binary test labels.
 
     Returns
-    -------
+    
     dict
         Keys: ``model``, ``t_best``, ``y_pred``, ``y_prob``,
         ``accuracy``, ``precision``, ``recall``, ``f1``, ``roc_auc``.
@@ -210,7 +205,7 @@ def plot_confusion_matrices(lr_result, rf_result, y_test, output_dir="plots"):
     re-passed through each model.
 
     Parameters
-    ----------
+    
     lr_result : dict
         Output of :func:`build_logistic_regression_model`.
     rf_result : dict
@@ -221,7 +216,6 @@ def plot_confusion_matrices(lr_result, rf_result, y_test, output_dir="plots"):
         Directory to save the figure.  Created if it does not exist.
 
     Output
-    ------
     ``{output_dir}/confusion_matrices.png``
     """
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -256,7 +250,7 @@ def plot_metrics_bar_chart(lr_result, rf_result, output_dir="plots"):
     """Save a grouped bar chart comparing Accuracy, Precision, Recall, and F1.
 
     Parameters
-    ----------
+    
     lr_result : dict
         Output of :func:`build_logistic_regression_model`.
     rf_result : dict
@@ -265,7 +259,6 @@ def plot_metrics_bar_chart(lr_result, rf_result, output_dir="plots"):
         Directory to save the figure.
 
     Output
-    ------
     ``{output_dir}/classification_metrics_comparison.png``
     """
     metrics = ["accuracy", "precision", "recall", "f1"]
@@ -321,7 +314,7 @@ def plot_roc_curves(lr_result, rf_result, y_test, output_dir="plots"):
     performance of a random classifier.
 
     Parameters
-    ----------
+    
     lr_result : dict
         Output of :func:`build_logistic_regression_model`.
     rf_result : dict
@@ -332,7 +325,6 @@ def plot_roc_curves(lr_result, rf_result, y_test, output_dir="plots"):
         Directory to save the figure.
 
     Output
-    ------
     ``{output_dir}/roc_curves.png``
     """
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -371,7 +363,7 @@ def save_metrics(lr_result, rf_result, output_dir="metrics"):
     """Save classification metrics to CSV and JSON.
 
     Parameters
-    ----------
+    
     lr_result : dict
         Output of :func:`build_logistic_regression_model`.
     rf_result : dict
@@ -380,7 +372,6 @@ def save_metrics(lr_result, rf_result, output_dir="metrics"):
         Directory to save metric files.  Created if it does not exist.
 
     Outputs
-    -------
     ``{output_dir}/classification_metrics.csv``
         Wide-format table, one row per model.
     ``{output_dir}/classification_metrics.json``
@@ -410,9 +401,6 @@ def save_metrics(lr_result, rf_result, output_dir="metrics"):
     print(f"  Saved: {json_path}")
 
 
-# ------------------------------------------------------------------ #
-#  Console output                                                     #
-# ------------------------------------------------------------------ #
 
 def print_comparison_table(lr_result, rf_result):
     """Print a formatted metric comparison table to stdout.
@@ -422,7 +410,7 @@ def print_comparison_table(lr_result, rf_result):
     Random Forest over the Logistic Regression baseline.
 
     Parameters
-    ----------
+    
     lr_result : dict
         Output of :func:`build_logistic_regression_model`.
     rf_result : dict
@@ -457,10 +445,7 @@ def print_comparison_table(lr_result, rf_result):
     print("=" * len(header) + "\n")
 
 
-# ------------------------------------------------------------------ #
-#  Entry point                                                        #
-# ------------------------------------------------------------------ #
-
+#Main
 if __name__ == "__main__":
     # Create output directories if they do not exist
     os.makedirs("plots", exist_ok=True)

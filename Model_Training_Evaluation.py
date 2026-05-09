@@ -1,38 +1,31 @@
 """
 Model Training and Evaluation
-==============================
-Defines :class:`Model_Training_Evaluation`, which trains and evaluates
+
+Defines class:`Model_Training_Evaluation`, which trains and evaluates
 two advanced ML models on the bank-marketing dataset:
 
-Classification
-    :meth:`~Model_Training_Evaluation.classification_model` trains a
-    :class:`~sklearn.ensemble.RandomForestClassifier` with
-    :class:`~sklearn.model_selection.RandomizedSearchCV` over
+Classification:
+    This class trains a 
+    RandomForestClassifier with RandomizedSearchCV over
     ``n_estimators``, ``max_depth``, and ``min_samples_split``.  The
     optimal probability threshold is derived from the precision-recall
     curve.
 
-Clustering
-    :meth:`~Model_Training_Evaluation.clustering_model` exhaustively
-    searches over cluster counts (2–9) and linkage methods
-    (complete, average, single) for
-    :class:`~sklearn.cluster.AgglomerativeClustering`, selecting the
-    configuration with the highest silhouette score.
+Clustering:
+    This class exhaustively searches over cluster counts (2–9) and linkage methods
+    (complete, average, single) for Hierarchical Clustering, selecting the
+    combination with the highest silhouette score.
 
 Run standalone
---------------
 ::
 
     python Model_Training_Evaluation.py
 
 Output
-------
-* Confusion matrix saved to ``metrics.png`` (classification).
-* Optimal silhouette score and cluster count printed to stdout (clustering).
 
-Dependencies
-------------
-numpy, matplotlib, scikit-learn, Preprocessing (local module)
+* Confusion matrix saved to ``metrics.png`` (classification).
+* Optimal silhouette score printed to stdout (clustering).
+
 """
 
 from Preprocessing import Preprocessing
@@ -68,25 +61,21 @@ class Model_Training_Evaluation():
         """
         print("Welcome to model")
 
-    # ------------------------------------------------------------------ #
-    #  Classification                                                     #
-    # ------------------------------------------------------------------ #
+    #  Classification
 
     def classification_model(self, X_train, X_test, y_train, y_test):
         """Train a Random Forest classifier with hyperparameter search.
 
-        Uses :class:`~sklearn.model_selection.RandomizedSearchCV` over
-        three hyperparameters with 5-fold
-        :class:`~sklearn.model_selection.StratifiedKFold`
-        cross-validation.  After training, the probability threshold is
+        Uses RandomizedSearchCV over three hyperparameters with 5-fold
+        StratifiedKFold cross-validation.  After training, the probability threshold is
         tuned on the test set by finding the point on the precision-recall
         curve that maximises ``precision × recall``.
 
         Parameters
-        ----------
+
         X_train : pd.DataFrame
             Encoded training feature matrix from
-            :class:`Preprocessing.classification_processing`.
+            Preprocessing.classification_processing.
         X_test : pd.DataFrame
             Encoded test feature matrix.
         y_train : pd.Series
@@ -95,20 +84,18 @@ class Model_Training_Evaluation():
             Binary test labels.
 
         Returns
-        -------
+
         final_model : RandomForestClassifier
-            The best estimator selected by
-            :class:`~sklearn.model_selection.RandomizedSearchCV`.
+            The best estimator selected by RandomizedSearchCV.
         t_best : float
             Optimal probability threshold derived from the
             precision-recall curve (maximises precision × recall).
 
         Side effects
-        ------------
+
         Saves a confusion matrix plot to ``metrics.png`` at 300 DPI.
         """
-        # Apply hyperparameter tuning to the model. Use the RandomSearch method.
-        # class_weight="balanced" compensates for the class imbalance in deposit
+
         model = RandomForestClassifier(class_weight="balanced")
         hyperparameter_tune = RandomizedSearchCV(
             model,
@@ -123,12 +110,11 @@ class Model_Training_Evaluation():
         final_model = hyperparameter_tune.best_estimator_
 
         # Evaluate the model. Display the precision recall curve.
-        # predict_proba returns class probabilities; index 1 = positive class
         y_pred = final_model.predict_proba(X_test)[:, 1]
         precision, recall, threshold_list = precision_recall_curve(y_test, y_pred)
 
         # Find the best possible threshold to use.
-        # argmax(precision * recall) balances both objectives simultaneously
+
         idx = np.argmax(precision * recall)
         t_best = threshold_list[idx]
 
@@ -157,39 +143,37 @@ class Model_Training_Evaluation():
         # Return the model, shap explainer, and threshold
         return final_model, t_best
 
-    # ------------------------------------------------------------------ #
-    #  Clustering                                                         #
-    # ------------------------------------------------------------------ #
+    #  Clustering
 
     def clustering_model(self, X_train, X_test):
         """Fit Agglomerative Clustering with exhaustive linkage and cluster search.
 
-        Tests all combinations of ``n_clusters`` ∈ [2, 9] and linkage
-        methods ``{'complete', 'average', 'single'}`` — 24 configurations
+        This function tests all combinations of ``n_clusters`` ∈ [2, 9] and linkage
+        methods ``{'complete', 'average', 'single'}`` — 24 combinations
         in total.  Selects the combination with the highest silhouette
         score.
 
         Agglomerative Clustering is a hierarchical bottom-up approach:
         it starts with each sample as its own cluster and iteratively
         merges the closest pair.  Unlike K-Means it does not assume
-        spherical clusters and requires no centroid initialisation.
+        spherical clusters and requires no centroid management.
 
         Parameters
-        ----------
+
         X_train : pd.DataFrame
             Encoded and scaled training feature matrix from
-            :class:`Preprocessing.clustering_processing`.
+            Preprocessing.clustering_processing.
         X_test : pd.DataFrame
             Encoded and scaled test feature matrix (unused in fitting,
             kept for API consistency).
 
         Returns
-        -------
+
         optimal_model : AgglomerativeClustering
             Best fitted clustering model by silhouette score.
 
         Prints
-        ------
+
         Optimal silhouette score and optimal number of clusters to stdout.
         """
         # Define the clustering model. Use Hierarchical Clustering.
@@ -220,9 +204,7 @@ class Model_Training_Evaluation():
         return optimal_model
 
 
-# ------------------------------------------------------------------ #
-#  Standalone execution                                               #
-# ------------------------------------------------------------------ #
+# Main                                               
 
 if __name__ == "__main__":
     processor = Preprocessing()

@@ -1,6 +1,6 @@
 """
 generate_summary.py
-===================
+
 Reads the metric JSON files produced by ``evaluate_classification.py``
 and ``evaluate_clustering.py`` and generates a comprehensive Markdown
 report at ``results/summaries/final_summary.md``.

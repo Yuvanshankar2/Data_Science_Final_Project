@@ -1,6 +1,6 @@
 """
 evaluate_clustering.py
-======================
+
 Standalone evaluation script that trains and compares two clustering
 algorithms on the bank-marketing dataset:
 
@@ -14,7 +14,7 @@ algorithms on the bank-marketing dataset:
   ``{complete, average, single}``.
 
 Generated outputs
------------------
+
 plots/
     silhouette_comparison.png
         Bar chart comparing best silhouette scores for both algorithms.
@@ -81,15 +81,13 @@ def run_kmeans_sweep(X_train, k_range=range(2, 10)):
     The best model is selected by the highest silhouette score.
 
     Parameters
-    ----------
     X_train : pd.DataFrame
         Encoded and scaled training feature matrix from
-        :class:`Preprocessing.clustering_processing`.
+        Preprocessing.clustering_processing.
     k_range : range
         Cluster counts to evaluate (default 2–9 inclusive).
 
     Returns
-    -------
     dict
         Keys:
 
@@ -136,7 +134,7 @@ def run_agglomerative_sweep(
     silhouette score.
 
     Linkage method semantics
-    ------------------------
+    
     complete
         Distance between clusters = max pairwise distance (merges compact
         clusters; sensitive to outliers).
@@ -147,7 +145,6 @@ def run_agglomerative_sweep(
         prone to chaining).
 
     Parameters
-    ----------
     X_train : pd.DataFrame
         Encoded and scaled training feature matrix.
     k_range : range
@@ -157,11 +154,10 @@ def run_agglomerative_sweep(
         ``['complete', 'average', 'single']``.
 
     Returns
-    -------
     dict
         Keys:
 
-        * ``best_model``    – fitted :class:`~sklearn.cluster.AgglomerativeClustering`
+        * ``best_model``    – fitted AgglomerativeClustering
         * ``best_k``        – int
         * ``best_linkage``  – str
         * ``best_score``    – float
@@ -202,9 +198,7 @@ def run_agglomerative_sweep(
     }
 
 
-# ------------------------------------------------------------------ #
-#  Cluster interpretation                                             #
-# ------------------------------------------------------------------ #
+#  Cluster interpretation                                             
 
 def describe_clusters(labels, X_train_raw, y_train_raw, model_name):
     """Describe each cluster using original (unscaled) feature values.
@@ -215,7 +209,6 @@ def describe_clusters(labels, X_train_raw, y_train_raw, model_name):
     the context of the bank marketing campaign.
 
     Parameters
-    ----------
     labels : np.ndarray
         Cluster label array aligned row-by-row with ``X_train_raw``.
     X_train_raw : pd.DataFrame
@@ -228,7 +221,6 @@ def describe_clusters(labels, X_train_raw, y_train_raw, model_name):
         ``'K-Means'`` or ``'Agglomerative'`` — used for labelling.
 
     Returns
-    -------
     list of dict
         One dict per cluster with keys: ``model``, ``cluster_id``,
         ``size``, ``pct_total``, ``age_mean``, ``balance_mean``,
@@ -294,7 +286,6 @@ def plot_silhouette_comparison(kmeans_result, agg_result, output_dir="plots"):
     scores (closer to 1.0) indicate tighter, better-separated clusters.
 
     Parameters
-    ----------
     kmeans_result : dict
         Output of :func:`run_kmeans_sweep`.
     agg_result : dict
@@ -303,7 +294,6 @@ def plot_silhouette_comparison(kmeans_result, agg_result, output_dir="plots"):
         Directory to save the figure.
 
     Output
-    ------
     ``{output_dir}/silhouette_comparison.png``
     """
     models = ["K-Means\n(Baseline)", "Agglomerative\n(Advanced)"]
@@ -342,7 +332,6 @@ def plot_cluster_size_distribution(kmeans_result, agg_result, output_dir="plots"
     indicate imbalanced segmentation.
 
     Parameters
-    ----------
     kmeans_result : dict
         Output of :func:`run_kmeans_sweep`.
     agg_result : dict
@@ -350,9 +339,6 @@ def plot_cluster_size_distribution(kmeans_result, agg_result, output_dir="plots"
     output_dir : str
         Directory to save the figure.
 
-    Output
-    ------
-    ``{output_dir}/cluster_size_distribution.png``
     """
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     fig.suptitle("Cluster Size Distribution", fontsize=14)
